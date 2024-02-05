@@ -3,6 +3,7 @@
 namespace JMS\JobQueueBundle\Controller;
 
 use Doctrine\Common\Util\ClassUtils;
+use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\ORM\EntityManager;
 use JMS\JobQueueBundle\Entity\Job;
 use JMS\JobQueueBundle\Entity\Repository\JobManager;
@@ -15,6 +16,12 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class JobController extends AbstractController
 {
+    public function __construct(ManagerRegistry $em, JobManager $jobManager)
+    {
+        $this->em = $em;
+        $this->jobManager = $jobManager;
+    }
+
     /**
      * @Route("/", name = "jms_jobs_overview")
      */
@@ -23,7 +30,7 @@ class JobController extends AbstractController
         $jobFilter = JobFilter::fromRequest($request);
 
         $qb = $this->getEm()->createQueryBuilder();
-        $qb->select('j')->from('JMSJobQueueBundle:Job', 'j')
+        $qb->select('j')->from(Job::class, 'j')
             ->where($qb->expr()->isNull('j.originalJob'))
             ->orderBy('j.id', 'desc');
 
@@ -151,11 +158,11 @@ class JobController extends AbstractController
 
     private function getEm(): EntityManager
     {
-        return $this->get('doctrine')->getManagerForClass(Job::class);
+        return $this->em->getManagerForClass(Job::class);
     }
 
     private function getRepo(): JobManager
     {
-        return $this->get('jms_job_queue.job_manager');
+        return $this->jobManager;
     }
 }

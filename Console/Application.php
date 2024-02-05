@@ -7,6 +7,8 @@ declare(ticks = 10000000);
 use Doctrine\DBAL\Statement;
 use Doctrine\DBAL\Types\Type;
 
+use JMS\JobQueueBundle\Entity\Job;
+
 use Symfony\Bundle\FrameworkBundle\Console\Application as BaseApplication;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -37,7 +39,7 @@ class Application extends BaseApplication
         }
     }
 
-    public function doRun(InputInterface $input, OutputInterface $output)
+    public function doRun(InputInterface $input, OutputInterface $output): int
     {
         $this->input = $input;
 
@@ -53,7 +55,7 @@ class Application extends BaseApplication
         }
     }
 
-    public function onTick()
+    public function onTick(): void
     {
         if ( ! $this->input->hasOption('jms-job-id') || null === $jobId = $this->input->getOption('jms-job-id')) {
             return;
@@ -77,7 +79,7 @@ class Application extends BaseApplication
         }
     }
 
-    private function saveDebugInformation(\Exception $ex = null)
+    private function saveDebugInformation(\Exception $ex = null): void
     {
         if ( ! $this->input->hasOption('jms-job-id') || null === $jobId = $this->input->getOption('jms-job-id')) {
             return;
@@ -102,6 +104,6 @@ class Application extends BaseApplication
 
     private function getConnection()
     {
-        return $this->getKernel()->getContainer()->get('doctrine')->getManagerForClass('JMSJobQueueBundle:Job')->getConnection();
+        return $this->getKernel()->getContainer()->get('doctrine')->getManagerForClass(Job::class)->getConnection();
     }
 }
