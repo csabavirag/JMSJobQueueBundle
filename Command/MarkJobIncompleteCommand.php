@@ -11,10 +11,12 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputArgument;
 
+#[\Symfony\Component\Console\Attribute\AsCommand(
+    name: 'jms-job-queue:mark-incomplete',
+    description: 'Internal command (do not use). It marks jobs as incomplete.',
+    )]
 class MarkJobIncompleteCommand extends Command
 {
-    protected static $defaultName = 'jms-job-queue:mark-incomplete';
-
     private $registry;
     private $jobManager;
 
@@ -29,7 +31,6 @@ class MarkJobIncompleteCommand extends Command
     protected function configure(): void
     {
         $this
-            ->setDescription('Internal command (do not use). It marks jobs as incomplete.')
             ->addArgument('job-id', InputArgument::REQUIRED, 'The ID of the Job.')
         ;
     }
