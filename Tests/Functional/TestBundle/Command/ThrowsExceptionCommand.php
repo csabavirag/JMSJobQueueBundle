@@ -8,12 +8,12 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class ThrowsExceptionCommand extends Command
 {
+    protected static $defaultName = 'jms-job-queue:throws-exception-cmd';
     protected function configure()
     {
-        $this->setName('jms-job-queue:throws-exception-cmd');
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): never
     {
         var_dump('Throwing exception');
         throw new \RuntimeException('Something went wrong.');

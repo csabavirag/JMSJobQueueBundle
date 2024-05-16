@@ -6,10 +6,9 @@ use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Types\ConversionException;
 use Doctrine\DBAL\Types\Type;
 
-
 class SafeObjectType extends Type
 {
-    public const TYPE_NAME =  'jms_job_safe_object';
+    public const TYPE_NAME = 'jms_job_safe_object';
 
     public function getSQLDeclaration(array $column, AbstractPlatform $platform): string
     {
@@ -40,7 +39,7 @@ class SafeObjectType extends Type
         }
     }
 
-    public function getName():string
+    public function getName(): string
     {
         return 'jms_job_safe_object';
     }

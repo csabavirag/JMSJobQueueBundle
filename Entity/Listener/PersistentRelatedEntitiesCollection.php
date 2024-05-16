@@ -19,16 +19,12 @@ use JMS\JobQueueBundle\Entity\Job;
  *
  * @author Johannes M. Schmitt <schmittjoh@gmail.com>
  */
-class PersistentRelatedEntitiesCollection implements Collection, Selectable
+class PersistentRelatedEntitiesCollection implements Collection, Selectable, \Stringable
 {
-    private $registry;
-    private $job;
     private $entities;
 
-    public function __construct(ManagerRegistry $registry, Job $job)
+    public function __construct(private readonly ManagerRegistry $registry, private readonly Job $job)
     {
-        $this->registry = $registry;
-        $this->job = $job;
     }
 
     /**
@@ -111,7 +107,7 @@ class PersistentRelatedEntitiesCollection implements Collection, Selectable
      * @param string|integer $key
      * @return object|null The removed element or NULL, if no element exists for the given key.
      */
-    public function remove($key)
+    public function remove($key): never
     {
         throw new \LogicException('remove() is not supported.');
     }
@@ -122,7 +118,7 @@ class PersistentRelatedEntitiesCollection implements Collection, Selectable
      * @param object $element The element to remove.
      * @return boolean TRUE if this collection contained the specified element, FALSE otherwise.
      */
-    public function removeElement($element)
+    public function removeElement($element): never
     {
         throw new \LogicException('removeElement() is not supported.');
     }
@@ -132,10 +128,9 @@ class PersistentRelatedEntitiesCollection implements Collection, Selectable
      *
      * @see containsKey()
      *
-     * @param mixed $offset
      * @return bool
      */
-    public function offsetExists($offset): bool
+    public function offsetExists(mixed $offset): bool
     {
         $this->initialize();
 
@@ -147,10 +142,9 @@ class PersistentRelatedEntitiesCollection implements Collection, Selectable
      *
      * @see get()
      *
-     * @param mixed $offset
      * @return mixed
      */
-    public function offsetGet($offset): mixed
+    public function offsetGet(mixed $offset): mixed
     {
         $this->initialize();
 
@@ -163,11 +157,9 @@ class PersistentRelatedEntitiesCollection implements Collection, Selectable
      * @see add()
      * @see set()
      *
-     * @param mixed $offset
-     * @param mixed $value
      * @return bool
      */
-    public function offsetSet($offset, $value): void
+    public function offsetSet(mixed $offset, mixed $value): void
     {
         throw new \LogicException('Adding new related entities is not supported after initial creation.');
     }
@@ -177,10 +169,9 @@ class PersistentRelatedEntitiesCollection implements Collection, Selectable
      *
      * @see remove()
      *
-     * @param mixed $offset
      * @return mixed
      */
-    public function offsetUnset($offset): void
+    public function offsetUnset(mixed $offset): void
     {
         throw new \LogicException('unset() is not supported.');
     }
@@ -264,11 +255,7 @@ class PersistentRelatedEntitiesCollection implements Collection, Selectable
     public function get($key)
     {
         $this->initialize();
-
-        if (isset($this->entities[$key])) {
-            return $this->entities[$key];
-        }
-        return null;
+        return $this->entities[$key] ?? null;
     }
 
     /**
@@ -345,7 +332,7 @@ class PersistentRelatedEntitiesCollection implements Collection, Selectable
     {
         $this->initialize();
 
-        return ! $this->entities;
+        return !$this->entities;
     }
 
     /**
@@ -400,7 +387,7 @@ class PersistentRelatedEntitiesCollection implements Collection, Selectable
         $this->initialize();
 
         foreach ($this->entities as $key => $element) {
-            if ( ! $p($key, $element)) {
+            if (!$p($key, $element)) {
                 return false;
             }
         }
@@ -421,7 +408,7 @@ class PersistentRelatedEntitiesCollection implements Collection, Selectable
     {
         $this->initialize();
 
-        $coll1 = $coll2 = array();
+        $coll1 = $coll2 = [];
         foreach ($this->entities as $key => $element) {
             if ($p($key, $element)) {
                 $coll1[$key] = $element;
@@ -429,7 +416,7 @@ class PersistentRelatedEntitiesCollection implements Collection, Selectable
                 $coll2[$key] = $element;
             }
         }
-        return array(new ArrayCollection($coll1), new ArrayCollection($coll2));
+        return [new ArrayCollection($coll1), new ArrayCollection($coll2)];
     }
 
     /**
@@ -437,9 +424,9 @@ class PersistentRelatedEntitiesCollection implements Collection, Selectable
      *
      * @return string
      */
-    public function __toString()
+    public function __toString(): string
     {
-        return __CLASS__ . '@' . spl_object_hash($this);
+        return self::class . '@' . spl_object_hash($this);
     }
 
     /**
@@ -479,16 +466,16 @@ class PersistentRelatedEntitiesCollection implements Collection, Selectable
     {
         $this->initialize();
 
-        $expr     = $criteria->getWhereExpression();
+        $expr = $criteria->getWhereExpression();
         $filtered = $this->entities;
 
         if ($expr) {
-            $visitor  = new ClosureExpressionVisitor();
-            $filter   = $visitor->dispatch($expr);
+            $visitor = new ClosureExpressionVisitor();
+            $filter = $visitor->dispatch($expr);
             $filtered = array_filter($filtered, $filter);
         }
 
-        if (null !== $orderings = $criteria->getOrderings()) {
+        if (null !== $orderings = $criteria->orderings()) {
             $next = null;
             foreach (array_reverse($orderings) as $field => $ordering) {
                 $next = ClosureExpressionVisitor::sortByField($field, $ordering == 'DESC' ? -1 : 1, $next);
@@ -510,7 +497,7 @@ class PersistentRelatedEntitiesCollection implements Collection, Selectable
     /**
      * {@inheritDoc}
      */
-    public function reduce(Closure $func, $initial = null)
+    public function reduce(Closure $func, $initial = null): mixed
     {
         return array_reduce($this->entities, $func, $initial);
     }
@@ -518,7 +505,7 @@ class PersistentRelatedEntitiesCollection implements Collection, Selectable
     /**
      * {@inheritDoc}
      */
-    public function findFirst(Closure $p)
+    public function findFirst(Closure $p): mixed
     {
         foreach ($this->entities as $key => $element) {
             if ($p($key, $element)) {
@@ -536,20 +523,20 @@ class PersistentRelatedEntitiesCollection implements Collection, Selectable
         }
 
         $con = $this->registry->getManagerForClass(Job::class)->getConnection();
-        $entitiesPerClass = array();
+        $entitiesPerClass = [];
         $count = 0;
-        foreach ($con->query("SELECT related_class, related_id FROM jms_job_related_entities WHERE job_id = ".$this->job->getId()) as $data) {
+        foreach ($con->query("SELECT related_class, related_id FROM jms_job_related_entities WHERE job_id = " . $this->job->getId()) as $data) {
             $count += 1;
-            $entitiesPerClass[$data['related_class']][] = json_decode($data['related_id'], true);
+            $entitiesPerClass[$data['related_class']][] = json_decode((string) $data['related_id'], true);
         }
 
         if (0 === $count) {
-            $this->entities = array();
+            $this->entities = [];
 
             return;
         }
 
-        $entities = array();
+        $entities = [];
         foreach ($entitiesPerClass as $className => $ids) {
             $em = $this->registry->getManagerForClass($className);
             $qb = $em->createQueryBuilder()
@@ -560,9 +547,9 @@ class PersistentRelatedEntitiesCollection implements Collection, Selectable
                 $expr = null;
                 foreach ($id as $k => $v) {
                     if (null === $expr) {
-                        $expr = $qb->expr()->eq('e.'.$k, '?'.(++$i));
+                        $expr = $qb->expr()->eq('e.' . $k, '?' . (++$i));
                     } else {
-                        $expr = $qb->expr()->andX($expr, $qb->expr()->eq('e.'.$k, '?'.(++$i)));
+                        $expr = $qb->expr()->andX($expr, $qb->expr()->eq('e.' . $k, '?' . (++$i)));
                     }
 
                     $qb->setParameter($i, $v);

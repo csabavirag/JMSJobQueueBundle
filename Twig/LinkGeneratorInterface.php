@@ -4,7 +4,7 @@ namespace JMS\JobQueueBundle\Twig;
 
 interface LinkGeneratorInterface
 {
-    function supports($entity);
-    function generate($entity);
-    function getLinkname($entity);
+    public function supports($entity);
+    public function generate($entity);
+    public function getLinkname($entity);
 }

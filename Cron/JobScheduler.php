@@ -23,8 +23,6 @@ interface JobScheduler
     /**
      * Creates the given command when it is scheduled.
      *
-     * @param string $command
-     * @param \DateTime $lastRunAt
      * @return Job
      */
     public function createJob(string $command, \DateTime $lastRunAt): Job;

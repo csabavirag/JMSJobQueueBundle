@@ -8,9 +8,9 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class NeverEndingCommand extends Command
 {
+    protected static $defaultName = 'jms-job-queue:never-ending';
     protected function configure()
     {
-        $this->setName('jms-job-queue:never-ending');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)

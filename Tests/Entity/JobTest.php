@@ -25,10 +25,10 @@ class JobTest extends TestCase
 {
     public function testConstruct()
     {
-        $job = new Job('a:b', array('a', 'b', 'c'));
+        $job = new Job('a:b', ['a', 'b', 'c']);
 
         $this->assertEquals('a:b', $job->getCommand());
-        $this->assertEquals(array('a', 'b', 'c'), $job->getArgs());
+        $this->assertEquals(['a', 'b', 'c'], $job->getArgs());
         $this->assertNotNull($job->getCreatedAt());
         $this->assertEquals('pending', $job->getState());
         $this->assertNull($job->getStartedAt());
@@ -237,7 +237,7 @@ class JobTest extends TestCase
 
     public function testCloneDoesNotChangeQueue()
     {
-        $job = new Job('a', array(), true, 'foo');
+        $job = new Job('a', [], true, 'foo');
         $clonedJob = clone $job;
 
         $this->assertEquals('foo', $clonedJob->getQueue());
